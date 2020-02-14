@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t providencetechnology/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true providencetechnology/react-test npm test
+
+after_success:
+  - docker build -t providencetechnology/multi-client ./client
+  - docker build -t providencetechnology/multi-nginx ./nginx
+  - docker build -t providencetechnology/multi-server ./server
+  - docker build -t providencetechnology/multi-worker ./worker
+  #Login to the docker CLI
+  - echo "$docker_password" | docker login -u "$docker_id" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push providencetechnology/multi-client
+  - docker push providencetechnology/multi-nginx
+  - docker push providencetechnology/multi-server
+  - docker push providencetechnology/multi-worker
